@@ -20,18 +20,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
 };
 
 const registerUser = asyncHandler(async (req, res) => {
-  // Steps :
-  // 1. get user data from request
-  // 2. validation
-  // 3. check if user already exists
-  // 4. check for images
-  // 5. upload imgs to cloudinary
-  // 6. create user object; create entry in db
-  // 7. remove pssword, refresh tokens from response
-  // 8. check for user creation; return response
-
   const { username, email, password } = req.body;
-  // console.log(username, email, password, fullname);
 
   if (
     [username, email, password].some((field) => {
@@ -66,14 +55,10 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-  // 1. get user data from request body
-  // 2. ask for email or username
-  // 3. find the user
-  // 4. password check
-  // 5. access and refresh token
-  // 6. send cookies
+  const { inputUsernameOrEmail , password } = req.body || {};
 
-  const { email, username, password } = req.body || {};
+  const username = inputUsernameOrEmail?.includes("@") ? undefined : inputUsernameOrEmail;
+  const email = inputUsernameOrEmail?.includes("@") ? inputUsernameOrEmail : undefined;
 
   if (!username && !email) {
     throw new apiError(400, "Email or username is required");
@@ -113,8 +98,6 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-  // 1. clear cookies
-  // 2. return response
   await User.findByIdAndUpdate(
     req.user._id,
     {
@@ -176,7 +159,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-const updatePassword = asyncHandler(async (req, res) => {
+const   updatePassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword, confirmPassword } = req.body;
 
   if (newPassword != confirmPassword) {
@@ -202,13 +185,13 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
-  const { fullname, email } = req.body;
+  const { username, email } = req.body;
 
-  if (fullname && email) {
+  if (username && email) {
     const user = await User.findByIdAndUpdate(
       req.user?._id,
       {
-        $set: { fullname, email }
+        $set: { username, email }
       },
       {
         new: true
@@ -216,11 +199,11 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     ).select("-password -refreshToken");
 
     return res.status(200).json(new apiResponse(200, { user }, "Account details updated successfully"));
-  } else if (fullname) {
+  } else if (username) {
     const user = await User.findByIdAndUpdate(
       req.user?._id,
       {
-        $set: { fullname }
+        $set: { username }
       },
       {
         new: true
@@ -241,7 +224,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
     return res.status(200).json(new apiResponse(200, { user }, "Account details updated successfully"));
   } else {
-    throw new apiError(400, "Fullname or email is required");
+    throw new apiError(400, "Username or email is required");
   }
 });
 
