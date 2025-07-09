@@ -30,11 +30,11 @@ const registerUser = asyncHandler(async (req, res) => {
   // 7. remove pssword, refresh tokens from response
   // 8. check for user creation; return response
 
-  const { username, email, password, fullname } = req.body;
+  const { username, email, password } = req.body;
   // console.log(username, email, password, fullname);
 
   if (
-    [fullname, username, email, password].some((field) => {
+    [username, email, password].some((field) => {
       field?.trim() === "";
     })
   ) {
@@ -49,42 +49,11 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new apiError(409, "User already exists");
   }
 
-  // const avatarLocalPath = req.files?.avatar[0]?.path;
-  // const coverImageLocalPath = req.files?.coverImage[0]?.path;
-
-  let avatarLocalPath;
-  if (req.files && Array.isArray(req.files.avatar) && req.files.avatar.length > 0) {
-    avatarLocalPath = req.files.avatar[0].path;
-  } else {
-    throw new apiError(400, "Avatar is required");
-  }
-
-  let coverImageLocalPath;
-  if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
-    coverImageLocalPath = req.files.coverImage[0].path;
-  }
-
-  if (!avatarLocalPath) {
-    throw new apiError(400, "Avatar is required");
-  }
-
-  const avatar = await uploadOnCloudinary(avatarLocalPath);
-  let coverImage = { url: "" }; // default fallback
-  if (coverImageLocalPath) {
-    coverImage = await uploadOnCloudinary(coverImageLocalPath);
-  }
-
-  if (!avatar) {
-    throw new apiError(400, "Avatar is required");
-  }
-
   const user = await User.create({
-    fullname,
-    avatar: avatar.url,
-    coverImage: coverImage.url || "",
     email,
     password,
-    username: username.toLowerCase()
+    username: username.toLowerCase(),
+    coins: 500
   });
 
   const createdUser = await User.findById(user._id).select("-password -refreshToken");
