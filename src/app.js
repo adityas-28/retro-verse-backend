@@ -23,4 +23,18 @@ import userRoute from "./routes/user.route.js";
 // routes declaration
 app.use("/api/v1/user", userRoute);
 
+// Server Up Check
+app.get("/", (req, res) => {
+  res.send({message: "Server is running"});
+});
+
+
+// 404 handler
+app.use("*", (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found"
+  });
+});
+
 export { app };
