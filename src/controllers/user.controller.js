@@ -4,6 +4,17 @@ import { User } from "../models/user.models.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
 
+const generateAccessToken = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    const accessToken = user.generateAccessToken();
+
+    return accessToken;
+  } catch (error) {
+    throw new ApiError(500, "Something went wrong while generating access token");
+  }
+};
+
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -139,19 +150,12 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       throw new ApiError(401, "Refresh Token Expired");
     }
 
-    const options = {
-      httpOnly: true,
-      secure: true
-    };
-
-    const { accessToken, newRefreshToken } = await generateAccessAndRefreshTokens(user._id);
+    const accessToken = await generateAccessToken(user._id);
 
     return res
       .status(200)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", newRefreshToken, options)
       .json(
-        new apiResponse(200, { accessToken, refreshToken: newRefreshToken }, "Access Token Refreshed Successfully")
+        new apiResponse(200, { accessToken }, "Access Token Refreshed Successfully")
       );
   } catch (error) {
     throw new ApiError(401, error?.message || "Invalid Refresh Token");
